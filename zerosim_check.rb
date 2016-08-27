@@ -12,7 +12,7 @@ require 'mail'
 require 'active_support/all'
 
 # 会員ログインページ
-url = 'https://www.so-net.ne.jp/retail/u/login?realm=/retail/retail_userweb&from=https%3A%2F%2Fwww.so-net.ne.jp%3A443%2Fretail%2Fu%2FuserMenu%2F'
+url = 'https://www.so-net.ne.jp/retail/u/userMenu/'
 
 config=YAML.load_file("auth_user.yml")
 user = config['user']
@@ -36,17 +36,15 @@ end
 # 会員ページへログイン
 data = []
 agent = Mechanize.new
-agent.user_agent = 'Windows IE 7'
+agent.user_agent_alias = 'Windows IE 7'
 agent.get(url) do | page |
-  res = page.form_with(name:'Login') do | form |
+  mypage = page.form_with(name:'Login') do | form |
       form.IDToken1 = user
       form.IDToken2 = passwd
   end.submit
-end
-# 容量を取得
-agent.get('https://www.so-net.ne.jp/retail/u/userMenu/') do | page |
-  res = page.form_with(name:'userUsageActionForm') do | form |
-  end.submit
+
+  # 容量を取得
+  res = mypage.form_with(name:'userUsageActionForm').submit
   html = Nokogiri::HTML.parse(res.body)
   html.css('div').css('.guideSignElem').css('dd').each do | d |
     data.push(d.children.text.gsub(/(\s)/,"").gsub(/MB$/,"").to_i)
